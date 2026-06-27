@@ -10,6 +10,7 @@ const files = [
   'migrate_inventory.sql',
   'migrate_loss.sql',
   'migrate_prio.sql',
+  'migrate_mr.sql',
   'seed.sql',
   'seed_catalog.sql',
 ];

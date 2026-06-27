@@ -220,9 +220,9 @@ export default function Arenden() {
     finally { setStartingInv(false); }
   }
 
-  async function handleExport() {
+  async function handleExport(markAsSent) {
     setExporting(true);
-    try { await api.exportReports(exportFrom || undefined, exportTo || undefined); }
+    try { await api.exportReports(exportFrom || undefined, exportTo || undefined, markAsSent); if (markAsSent) load(); }
     catch (e) { alert(e.message); }
     finally { setExporting(false); }
   }
@@ -387,9 +387,9 @@ export default function Arenden() {
             </div>
           )}
 
-          {/* Export */}
+          {/* Export till MR-grupp */}
           <div className="mt-4 bg-white border border-gray-200 rounded-xl px-5 py-4">
-            <p className="text-xs font-semibold text-gray-600 mb-3">Exportera attesterade ersättningar</p>
+            <p className="text-xs font-semibold text-gray-600 mb-3">Exportera till MR-grupp</p>
             <div className="flex items-center gap-2 flex-wrap">
               <div className="flex items-center gap-1.5">
                 <label className="text-xs text-gray-500">Från</label>
@@ -401,12 +401,16 @@ export default function Arenden() {
                 <input type="date" value={exportTo} onChange={e => setExportTo(e.target.value)}
                        className="border rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-military-steel" />
               </div>
-              <button onClick={handleExport} disabled={exporting}
+              <button onClick={() => handleExport(true)} disabled={exporting}
                       className="btn-primary text-xs disabled:opacity-50">
-                {exporting ? 'Exporterar…' : 'Ladda ner Excel'}
+                {exporting ? 'Exporterar…' : 'Ladda ner & markera skickad'}
+              </button>
+              <button onClick={() => handleExport(false)} disabled={exporting}
+                      className="btn-secondary text-xs disabled:opacity-50">
+                Ladda ner (utan markering)
               </button>
             </div>
-            <p className="text-xs text-gray-400 mt-2">Lämna datum tomt för att exportera alla.</p>
+            <p className="text-xs text-gray-400 mt-2">Lämna datum tomt för att exportera alla. "Ladda ner & markera skickad" sätter datum i kolumnen "Skickat till MR".</p>
           </div>
 
           {/* Historik — attesterade rapporter */}
@@ -420,13 +424,26 @@ export default function Arenden() {
                 <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mt-2">
                   <ul className="divide-y divide-gray-100">
                     {approvedHistory.map(r => (
-                      <li key={r.id} className="px-5 py-3">
-                        <div className="text-sm text-gray-700">{reportTitle(r)}</div>
-                        <div className="text-xs text-gray-400 mt-0.5">
-                          {r.user_name} · {fmtDate(r.report_date)}
-                          {r.km > 0       && <span className="ml-2">{r.km} km</span>}
-                          {r.expenses > 0 && <span className="ml-2">{Number(r.expenses).toFixed(0)} kr</span>}
+                      <li key={r.id} className="px-5 py-3 flex items-center justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm text-gray-700">{reportTitle(r)}</div>
+                          <div className="text-xs text-gray-400 mt-0.5">
+                            {r.user_name} · {fmtDate(r.report_date)}
+                            {r.km > 0       && <span className="ml-2">{r.km} km</span>}
+                            {r.expenses > 0 && <span className="ml-2">{Number(r.expenses).toFixed(0)} kr</span>}
+                          </div>
                         </div>
+                        {r.mr_submitted_at ? (
+                          <span className="text-xs text-green-700 bg-green-50 border border-green-200 rounded px-2 py-0.5 shrink-0">
+                            MR {new Date(r.mr_submitted_at).toLocaleDateString('sv-SE')}
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => api.markMr([r.id]).then(load).catch(e => alert(e.message))}
+                            className="text-xs text-gray-400 hover:text-military-navy shrink-0">
+                            Markera skickad
+                          </button>
+                        )}
                       </li>
                     ))}
                   </ul>

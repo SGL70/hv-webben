@@ -56,10 +56,11 @@ export const api = {
 
   // Reports
   reports:         (filter)   => api.get(`/reports${filter ? `?filter=${filter}` : ''}`),
-  exportReports:   async (from, to) => {
+  exportReports:   async (from, to, mark = false) => {
     const p = new URLSearchParams();
     if (from) p.append('from', from);
     if (to)   p.append('to', to);
+    if (mark) p.append('mark', '1');
     const res = await fetch(`/api/reports/export?${p}`, {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     });
@@ -72,6 +73,7 @@ export const api = {
     a.click();
     URL.revokeObjectURL(url);
   },
+  markMr: (ids) => api.post('/reports/mark-mr', { ids }),
   pendingCount:    ()         => api.get('/reports/pending-count'),
   createReport:    (data)     => api.post('/reports', data),
   updateReport:    (id, data) => api.put(`/reports/${id}`, data),
