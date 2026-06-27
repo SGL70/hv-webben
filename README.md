@@ -1,10 +1,10 @@
-# Hv-webben
+# HvSoldat
 
 Självhostad prototyp av ett digitalt administrativt stödsystem för Hemvärnets kompani- och bataljonsförband. Syftet är att ersätta manuella processer (Excel-listor, pappersblanketter, e-post) med ett modernt webbgränssnitt anpassat för Hemvärnets organisationsstruktur och roller.
 
 > **Status:** Aktiv prototyp — funktionell men inte produktionsklar. BankID-integration implementerad och testad (se `bankid`-branch). Saknar e-postnotiser och säkerhetshärdning för publikt internet.
 
-![Hv-webben dashboard](screenshot.png)
+![HvSoldat dashboard](screenshot.png)
 
 ---
 
@@ -120,8 +120,8 @@ inventory_items    — per-person-svar på inventering
 ### 1. Klona och installera
 
 ```bash
-git clone https://github.com/SGL70/hv-webben.git
-cd hv-webben
+git clone https://github.com/SGL70/hvsoldat.git
+cd hvsoldat
 
 cd backend && npm install
 cd ../frontend && npm install

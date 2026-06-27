@@ -137,7 +137,7 @@ export default function Login() {
         {/* Logo + app name */}
         <div className="flex flex-col items-center mb-6">
           <img src="/logo.png" alt="Hemvärnet" className="h-16 w-auto mb-3" />
-          <h1 className="text-xl font-bold text-[#1d3557] text-center">Välkommen till Hv-webben</h1>
+          <h1 className="text-xl font-bold text-[#1d3557] text-center">Välkommen till HvSoldat</h1>
           <p className="text-center text-gray-500 text-sm mt-1">Logga in med BankID</p>
         </div>
 
