@@ -44,14 +44,13 @@ function SidebarContent({ user, pendingBadge, hasRole, isLogistics, onNav, onLog
         <div className="text-white text-sm font-medium truncate">{user?.name}</div>
         <div className="text-white/50 text-xs">{ROLE_LABELS[user?.role]}</div>
         <div className="text-white/30 text-xs truncate">{user?.unit_name}</div>
-        <div className="mt-2 flex items-center gap-3">
+        <div className="mt-2 flex flex-col gap-1">
           <NavLink to="/profil" onClick={onNav}
             className="text-xs text-white/50 hover:text-white transition-colors">
             Redigera profil
           </NavLink>
-          <span className="text-white/20">·</span>
           <button onClick={onLogout}
-                  className="text-xs text-white/50 hover:text-white transition-colors">
+                  className="text-xs text-white/50 hover:text-white transition-colors text-left">
             Logga ut
           </button>
         </div>
