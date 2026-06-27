@@ -72,6 +72,7 @@ Inloggning sker idag via **simulerad BankID** (rollväljare) på `master`. Grene
 - Plutonchef kan avfärda med motivering — visas för soldaten
 - Soldaten kan redigera och skicka in igen
 - Attesterade rapporter sparas som historik (sökbar av KompC)
+- Excel-export av attesterade rapporter för MR-grupp (med datum­filter och markering av vad som skickats)
 - Badge-notifikation i navigation för väntande ärenden
 
 ### Utrustningshantering
@@ -79,7 +80,12 @@ Inloggning sker idag via **simulerad BankID** (rollväljare) på `master`. Grene
 - Rapportera förlust eller begära byte (och ev. beställa transport)
 - Ärendeflöde: soldat → KVM (godkänn/avslå)
 - Förlustblankett (M7102-500360E) genereras för utskrift
-- Kompaniinventering — KVM initierar, soldater bekräftar sina artiklar. Inventeringsdatum sparas
+- Kompaniinventering — KVM initierar med valfritt deadline-datum, soldater bekräftar sina artiklar
+
+### Nyheter
+- Nyhetsflöde på dashboarden synligt för alla inloggade
+- Logistikroller (kompc/kvm/s4/batc/s1) kan skapa och redigera nyheter
+- Stöd för bild, schemalagd publicering (publish_at) och omedelbar publicering
 
 ### Organisation
 - Hierarkiskt org-träd: bataljon → kompani → pluton → Tropp → grupp
@@ -103,12 +109,13 @@ org_units          — hierarkiskt träd (id, name, type, parent_id)
 users              — personal (personal_number som nyckel, role, org_unit_id)
 activities         — kalenderaktiviteter
 activity_responses — OSA per person (ja/nej/kanske)
-reports            — km-ers/utlägg/SÄVA (status: draft→submitted→reviewed→approved)
+reports            — km-ers/utlägg/SÄVA (status: draft→submitted→reviewed→approved, mr_submitted_at)
 equipment_templates — materialkatalog
 equipment_items    — personlig utrustning
 equipment_cases    — ärenden (förlust/byte)
-inventory_sessions — inventeringsomgångar
+inventory_sessions — inventeringsomgångar (med deadline)
 inventory_items    — per-person-svar på inventering
+news_posts         — nyheter (publish_at, image_url)
 ```
 
 ---
@@ -159,6 +166,7 @@ npm run db:setup
 | `migrate_inventory.sql` | Inventeringstabeller |
 | `migrate_loss.sql` | Förlustärenden |
 | `migrate_prio.sql` | PRIO-import |
+| `migrate_mr.sql` | MR-spårning (mr_submitted_at på reports) |
 | `seed.sql` | Mock-användare + exempeldata |
 | `seed_catalog.sql` | 73 standardartiklar (VSH033PG) |
 
@@ -201,7 +209,7 @@ Klicka på QR-koden i inloggningsvyn för att öppna rollväljaren. Inga löseno
 - [ ] Kalender: SÖB-filtrering per roll (kompc/stf/fanjunkare/kvm)
 - [ ] **Kalender: rikta aktivitet till specifik org-enhet** — idag skapas aktiviteter mot en fast enhet; behöver en enhetsväljarpe (bataljon/kompani/pluton/grupp) så t.ex. ett plutonsmöte bara syns för rätt pluton
 - [ ] **Närvaro­registrering** — grpc och uppåt bokför faktisk närvaro efter genomförd aktivitet (separat från OSA-svar)
-- [ ] **Export km-ers → MR-Grupp HR** — KompC genererar en sammanställning (PDF/Excel) över attesterade km-ers/utlägg/SÄVA för ett givet period och skickar till MR-gruppen
+- [x] **Export km-ers → MR-Grupp HR** — Excel-export med datumfilter, attesterad-av och spårning av vad som skickats till MR
 - [ ] **AFSE PDF-ifyllning** — fyll i AFSE-blanketten programmatiskt baserat på redovisningsdata; KVM anger generella uppgifter (kompanitillhörighet m.m.) en gång så att de förifylls på alla blanketter
 
 ### Funktionella tillägg
