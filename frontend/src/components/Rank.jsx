@@ -1,53 +1,55 @@
 import React from 'react';
 
 export const RANKS = [
-  { value: '',       label: '— Ingen grad —',  abbr: '',       insignia: '',       cls: '' },
+  { value: '',       label: '— Ingen grad —',  abbr: '' },
   // Officerare
-  { value: 'mj',    label: 'Major',            abbr: 'Mj',    insignia: '★★★★',  cls: 'text-yellow-500' },
-  { value: 'kn',    label: 'Kapten',           abbr: 'Kn',    insignia: '★★★',   cls: 'text-yellow-500' },
-  { value: 'lt',    label: 'Löjtnant',         abbr: 'Lt',    insignia: '★★',    cls: 'text-yellow-500' },
-  { value: 'fk',    label: 'Fänrik',           abbr: 'Fk',    insignia: '★',     cls: 'text-yellow-500' },
+  { value: 'mj',    label: 'Major',            abbr: 'Mj'    },
+  { value: 'kn',    label: 'Kapten',           abbr: 'Kn'    },
+  { value: 'lt',    label: 'Löjtnant',         abbr: 'Lt'    },
+  { value: 'fk',    label: 'Fänrik',           abbr: 'Fk'    },
   // Specialistofficerare
-  { value: 'fv',    label: 'Förvaltare',       abbr: 'Fv',    insignia: '⬡⬡⬡⬡', cls: 'text-amber-500' },
-  { value: 'fj',    label: 'Fanjunkare',       abbr: 'Fj',    insignia: '⬡⬡⬡',  cls: 'text-amber-500' },
-  { value: 'oserg', label: 'Översergeant',     abbr: 'Öserg', insignia: '⬡⬡',   cls: 'text-amber-500' },
-  { value: 'serg',  label: 'Sergeant',         abbr: 'Serg',  insignia: '⬡',     cls: 'text-amber-500' },
+  { value: 'fv',    label: 'Förvaltare',       abbr: 'Fv'    },
+  { value: 'fj',    label: 'Fanjunkare',       abbr: 'Fj'    },
+  { value: 'oserg', label: 'Översergeant',     abbr: 'Öserg' },
+  { value: 'serg',  label: 'Sergeant',         abbr: 'Serg'  },
   // Gruppchefer
-  { value: 'ofu',   label: 'Överfurir',        abbr: 'Öfu',   insignia: '››››',  cls: 'text-gray-400' },
-  { value: 'fu',    label: 'Furir',            abbr: 'Fu',    insignia: '›››',   cls: 'text-gray-400' },
-  { value: 'krp',   label: 'Korpral',          abbr: 'Krp',   insignia: '››',    cls: 'text-gray-400' },
-  { value: 'vkrp',  label: 'Vicekorpral',      abbr: 'Vkrp',  insignia: '›',     cls: 'text-gray-400' },
+  { value: 'ofu',   label: 'Överfurir',        abbr: 'Öfu'   },
+  { value: 'fu',    label: 'Furir',            abbr: 'Fu'    },
+  { value: 'krp',   label: 'Korpral',          abbr: 'Krp'   },
+  { value: 'vkrp',  label: 'Vicekorpral',      abbr: 'Vkrp'  },
   // Soldater
-  { value: 'men4',  label: 'Menig 4',          abbr: 'Men 4', insignia: '',       cls: '' },
-  { value: 'men3',  label: 'Menig 3',          abbr: 'Men 3', insignia: '',       cls: '' },
-  { value: 'men2',  label: 'Menig 2',          abbr: 'Men 2', insignia: '',       cls: '' },
-  { value: 'men1',  label: 'Menig 1',          abbr: 'Men 1', insignia: '',       cls: '' },
-  { value: 'men',   label: 'Menig',            abbr: 'Men',   insignia: '',       cls: '' },
+  { value: 'men4',  label: 'Menig 4',          abbr: 'Men 4' },
+  { value: 'men3',  label: 'Menig 3',          abbr: 'Men 3' },
+  { value: 'men2',  label: 'Menig 2',          abbr: 'Men 2' },
+  { value: 'men1',  label: 'Menig 1',          abbr: 'Men 1' },
+  { value: 'men',   label: 'Menig',            abbr: 'Men'   },
 ];
 
 const RANK_MAP = Object.fromEntries(RANKS.map(r => [r.value, r]));
 
-export function RankInsignia({ rank, className = '' }) {
+export function RankInsignia({ rank, className = '', size = 'sm' }) {
   const r = RANK_MAP[rank];
-  if (!r || !r.insignia) return null;
+  if (!r || !r.value) return null;
+  const h = size === 'lg' ? 'h-10' : size === 'md' ? 'h-7' : 'h-5';
   return (
-    <span className={`font-bold tracking-tighter leading-none ${r.cls} ${className}`} title={r.label}>
-      {r.insignia}
-    </span>
+    <img
+      src={`/ranks/${r.value}.jpg`}
+      alt={r.label}
+      title={r.label}
+      className={`${h} w-auto shrink-0 ${className}`}
+    />
   );
 }
 
 export function RankAbbr({ rank, className = '' }) {
   const r = RANK_MAP[rank];
   if (!r || !r.abbr) return null;
-  return (
-    <span className={`text-xs text-gray-400 ${className}`}>{r.abbr}</span>
-  );
+  return <span className={`text-xs text-gray-400 ${className}`}>{r.abbr}</span>;
 }
 
 export function RankSelect({ value, onChange, className = '' }) {
   const groups = [
-    { label: 'Officerare',          values: ['mj','kn','lt','fk'] },
+    { label: 'Officerare',           values: ['mj','kn','lt','fk'] },
     { label: 'Specialistofficerare', values: ['fv','fj','oserg','serg'] },
     { label: 'Gruppchefer',          values: ['ofu','fu','krp','vkrp'] },
     { label: 'Soldater',             values: ['men4','men3','men2','men1','men'] },
@@ -59,11 +61,7 @@ export function RankSelect({ value, onChange, className = '' }) {
         <optgroup key={g.label} label={g.label}>
           {g.values.map(v => {
             const r = RANK_MAP[v];
-            return (
-              <option key={v} value={v}>
-                {r.abbr} — {r.label}
-              </option>
-            );
+            return <option key={v} value={v}>{r.abbr} — {r.label}</option>;
           })}
         </optgroup>
       ))}
