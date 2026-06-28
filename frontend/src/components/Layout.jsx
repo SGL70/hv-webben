@@ -2,13 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
+import {
+  LayoutDashboard, Calendar, ClipboardList, Package,
+  FolderOpen, Users, Settings, Menu,
+} from 'lucide-react';
 
 const ROLE_LABELS = {
   soldat:'Soldat', grpc:'Gruppchef', pc:'Plutonchef', toc:'Troppchef',
   kompc:'Kompanichef', kvm:'Komp-VKM', s4:'S4 / Bat-VKM', batCh:'Bataljonschef', stab:'Stab'
 };
 
-function NavItem({ to, label, icon, badge, onClick }) {
+function NavItem({ to, label, icon: Icon, badge, onClick }) {
   return (
     <NavLink to={to} onClick={onClick}
       className={({ isActive }) =>
@@ -18,7 +22,7 @@ function NavItem({ to, label, icon, badge, onClick }) {
            : 'text-white/70 hover:text-white hover:bg-white/10'}`
       }
     >
-      <span className="text-lg">{icon}</span>
+      <Icon size={16} strokeWidth={1.75} className="shrink-0" />
       <span className="flex-1">{label}</span>
       {badge > 0 && (
         <span className="bg-red-500 text-white text-xs font-bold rounded-full min-w-[1.25rem] h-5 flex items-center justify-center px-1">
@@ -57,16 +61,16 @@ function SidebarContent({ user, pendingBadge, hasRole, isLogistics, onNav, onLog
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 py-4 space-y-0.5">
-        <NavItem to="/"           label="Översikt"         icon="🏠" onClick={onNav} />
-        <NavItem to="/kalender"   label="Kalender"         icon="📅" onClick={onNav} />
-        <NavItem to="/arenden"    label="Ärenden"          icon="📋" badge={pendingBadge} onClick={onNav} />
-        <NavItem to="/utrustning" label="Pers. Utrustning" icon="🎒" onClick={onNav} />
-        <NavItem to="/dokument"   label="Dokument"         icon="📁" onClick={onNav} />
+        <NavItem to="/"           label="Översikt"         icon={LayoutDashboard}  onClick={onNav} />
+        <NavItem to="/kalender"   label="Kalender"         icon={Calendar}         onClick={onNav} />
+        <NavItem to="/arenden"    label="Ärenden"          icon={ClipboardList}    badge={pendingBadge} onClick={onNav} />
+        <NavItem to="/utrustning" label="Pers. Utrustning" icon={Package}          onClick={onNav} />
+        <NavItem to="/dokument"   label="Dokument"         icon={FolderOpen}       onClick={onNav} />
         {hasRole('grpc') && (
-          <NavItem to="/enhet"    label="Min enhet"        icon="👥" onClick={onNav} />
+          <NavItem to="/enhet"    label="Min enhet"        icon={Users}            onClick={onNav} />
         )}
         {isLogistics() && (
-          <NavItem to="/org"      label="Administration"   icon="🏗️" onClick={onNav} />
+          <NavItem to="/org"      label="Administration"   icon={Settings}         onClick={onNav} />
         )}
       </nav>
     </>
@@ -124,9 +128,7 @@ export default function Layout({ children }) {
         {/* Mobile top bar */}
         <header className="md:hidden flex items-center gap-3 px-4 py-3 bg-military-navy shrink-0">
           <button onClick={() => setMenuOpen(true)} className="text-white p-1">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+            <Menu size={24} />
           </button>
           <img src="/logo.png" alt="" className="h-7 w-auto" />
           <span className="text-white font-bold text-sm tracking-wide flex-1">HV-WEBBEN</span>
