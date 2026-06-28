@@ -279,8 +279,8 @@ function ActivityCard({ a, responding, onRespond, onEdit, onDelete, onAttend, ca
       {a.description && <p className="text-xs text-gray-500 mt-2">{a.description}</p>}
       {(a.location || a.equipment) && (
         <div className="mt-2 space-y-0.5">
-          {a.location  && <div className="text-xs text-gray-500">📍 {a.location}</div>}
-          {a.equipment && <div className="text-xs text-gray-500">🎒 {a.equipment}</div>}
+          {a.location  && <div className="text-xs text-gray-500"><span className="text-gray-400">Plats:</span> {a.location}</div>}
+          {a.equipment && <div className="text-xs text-gray-500"><span className="text-gray-400">Utrustning:</span> {a.equipment}</div>}
         </div>
       )}
 
