@@ -28,33 +28,109 @@ function StatusBadge({ status }) {
   return <span className={`badge ${m.color}`}>{m.label}</span>;
 }
 
+export function calcSavaHours(days) {
+  return (days || []).reduce((sum, d) => {
+    if (!d.start || !d.end) return sum;
+    const [sh, sm] = d.start.split(':').map(Number);
+    const [eh, em] = d.end.split(':').map(Number);
+    return sum + Math.max(0, (eh * 60 + em - sh * 60 - sm) / 60);
+  }, 0);
+}
+
+export function SavaDaysEditor({ days, onChange }) {
+  const today = new Date().toISOString().slice(0, 10);
+
+  function addDay() {
+    const last = days.length > 0 ? days[days.length - 1].date : today;
+    const next = new Date(last);
+    next.setDate(next.getDate() + 1);
+    onChange([...days, { date: next.toISOString().slice(0, 10), start: '08:00', end: '16:00' }]);
+  }
+
+  function update(i, field, value) {
+    onChange(days.map((d, idx) => idx === i ? { ...d, [field]: value } : d));
+  }
+
+  const total = calcSavaHours(days);
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <label className="text-xs text-gray-500">Dagar</label>
+        <button type="button" onClick={addDay}
+                className="text-xs text-military-steel hover:underline font-medium">
+          + Lägg till dag
+        </button>
+      </div>
+      {days.length === 0 && (
+        <p className="text-xs text-gray-400 text-center py-3 border border-dashed border-gray-200 rounded-lg">
+          Inga dagar tillagda
+        </p>
+      )}
+      {days.map((d, i) => (
+        <div key={i} className="flex gap-1.5 items-center">
+          <input type="date" value={d.date}
+                 onChange={e => update(i, 'date', e.target.value)}
+                 className="flex-1 border rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-military-steel" />
+          <input type="time" value={d.start}
+                 onChange={e => update(i, 'start', e.target.value)}
+                 className="w-[90px] border rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-military-steel" />
+          <span className="text-gray-400 text-xs shrink-0">–</span>
+          <input type="time" value={d.end}
+                 onChange={e => update(i, 'end', e.target.value)}
+                 className="w-[90px] border rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-military-steel" />
+          <button type="button" onClick={() => onChange(days.filter((_, idx) => idx !== i))}
+                  className="text-gray-300 hover:text-red-500 text-base leading-none shrink-0">✕</button>
+        </div>
+      ))}
+      {days.length > 0 && (
+        <div className="text-xs text-gray-500 text-right pt-0.5">
+          Totalt: <span className="font-medium text-military-navy">{total % 1 === 0 ? total : total.toFixed(1)} timmar</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function CreateModal({ onClose, onCreated }) {
   const [activities, setActivities] = useState([]);
   const [form, setForm] = useState({
     report_type:         'km_ers',
     activity_id:         '',
-    description:         '',   // used as activity label when activity_id=''
+    description:         '',
     report_date:         new Date().toISOString().slice(0,10),
     km:                  0,
     expenses:            0,
     expense_description: '',
+    sava_days:           [],
   });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => { api.activities().then(setActivities); }, []);
 
   const useCalendar = form.activity_id !== '' && form.activity_id !== null;
+  const isSava = form.report_type === 'sava';
 
   async function submit(e, andSubmit = false) {
     e.preventDefault();
     if (!useCalendar && !form.description.trim()) {
       alert('Ange vad redovisningen avser.'); return;
     }
+    if (isSava && form.sava_days.length === 0) {
+      alert('Lägg till minst en dag.'); return;
+    }
+    const hours = isSava ? calcSavaHours(form.sava_days) : (form.hours || 0);
+    const report_date = isSava && form.sava_days.length > 0
+      ? form.sava_days[0].date
+      : form.report_date;
     setSaving(true);
     try {
       const created = await api.createReport({
         ...form,
+        hours,
+        report_date,
         activity_id: form.activity_id || null,
+        sava_days: isSava ? form.sava_days : null,
       });
       if (andSubmit) await api.submitReport(created.id);
       onCreated();
@@ -64,7 +140,7 @@ export function CreateModal({ onClose, onCreated }) {
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <h2 className="font-semibold text-military-navy">Ny redovisning</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-lg">✕</button>
@@ -75,7 +151,7 @@ export function CreateModal({ onClose, onCreated }) {
           <div>
             <label className="text-xs text-gray-500 block mb-1">Ersättningstyp</label>
             <select required value={form.report_type}
-                    onChange={e => setForm(f=>({...f, report_type: e.target.value}))}
+                    onChange={e => setForm(f=>({...f, report_type: e.target.value, sava_days: []}))}
                     className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-military-steel">
               <option value="km_ers">Km-ersättning</option>
               <option value="utlagg">Utlägg</option>
@@ -97,7 +173,6 @@ export function CreateModal({ onClose, onCreated }) {
             </select>
           </div>
 
-          {/* Övrigt-beskrivning när ingen aktivitet är vald */}
           {!useCalendar && (
             <div>
               <label className="text-xs text-gray-500 block mb-1">Vad avser redovisningen?</label>
@@ -108,51 +183,49 @@ export function CreateModal({ onClose, onCreated }) {
             </div>
           )}
 
-          {/* Datum */}
-          <div>
-            <label className="text-xs text-gray-500 block mb-1">Datum</label>
-            <input type="date" required value={form.report_date}
-                   onChange={e => setForm(f=>({...f, report_date: e.target.value}))}
-                   className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-military-steel" />
-          </div>
-
-          {/* Belopp / Tid */}
-          <div className="grid grid-cols-2 gap-2">
-            {form.report_type === 'km_ers' && (
-              <div>
-                <label className="text-xs text-gray-500 block mb-1">Km</label>
-                <input type="number" min="0" value={form.km}
-                       onChange={e => setForm(f=>({...f, km: e.target.value}))}
-                       className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none" />
-              </div>
-            )}
-            {(form.report_type === 'utlagg' || form.report_type === 'traktamente') && (
-              <div>
-                <label className="text-xs text-gray-500 block mb-1">Belopp (kr)</label>
-                <input type="number" min="0" step="0.01" value={form.expenses}
-                       onChange={e => setForm(f=>({...f, expenses: e.target.value}))}
-                       className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none" />
-              </div>
-            )}
-            {form.report_type === 'sava' && (
-              <div>
-                <label className="text-xs text-gray-500 block mb-1">Antal timmar</label>
-                <input type="number" min="0.5" step="0.5" value={form.hours}
-                       onChange={e => setForm(f=>({...f, hours: e.target.value}))}
-                       className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none" />
-              </div>
-            )}
-          </div>
-
-          {form.report_type === 'utlagg' && parseFloat(form.expenses) > 0 && (
+          {/* SÄVA: dagslista */}
+          {isSava ? (
+            <SavaDaysEditor
+              days={form.sava_days}
+              onChange={days => setForm(f => ({ ...f, sava_days: days }))}
+            />
+          ) : (
             <>
-              <input placeholder="Syfte för utlägg"
-                     value={form.expense_description}
-                     onChange={e => setForm(f=>({...f, expense_description: e.target.value}))}
-                     className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none" />
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-800">
-                Kom ihåg att skicka originalkvitto per post till MR-grupp/HR.
+              <div>
+                <label className="text-xs text-gray-500 block mb-1">Datum</label>
+                <input type="date" required value={form.report_date}
+                       onChange={e => setForm(f=>({...f, report_date: e.target.value}))}
+                       className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-military-steel" />
               </div>
+              <div className="grid grid-cols-2 gap-2">
+                {form.report_type === 'km_ers' && (
+                  <div>
+                    <label className="text-xs text-gray-500 block mb-1">Km</label>
+                    <input type="number" min="0" value={form.km}
+                           onChange={e => setForm(f=>({...f, km: e.target.value}))}
+                           className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none" />
+                  </div>
+                )}
+                {(form.report_type === 'utlagg' || form.report_type === 'traktamente') && (
+                  <div>
+                    <label className="text-xs text-gray-500 block mb-1">Belopp (kr)</label>
+                    <input type="number" min="0" step="0.01" value={form.expenses}
+                           onChange={e => setForm(f=>({...f, expenses: e.target.value}))}
+                           className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none" />
+                  </div>
+                )}
+              </div>
+              {form.report_type === 'utlagg' && parseFloat(form.expenses) > 0 && (
+                <>
+                  <input placeholder="Syfte för utlägg"
+                         value={form.expense_description}
+                         onChange={e => setForm(f=>({...f, expense_description: e.target.value}))}
+                         className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none" />
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-800">
+                    Kom ihåg att skicka originalkvitto per post till MR-grupp/HR.
+                  </div>
+                </>
+              )}
             </>
           )}
 

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import { CreateModal } from './Reports';
+import { CreateModal, SavaDaysEditor, calcSavaHours } from './Reports';
 
 const STATUS_META = {
   ok:            { label:'Ok',            color:'bg-green-100 text-green-800'  },
@@ -47,21 +47,34 @@ function EditReportModal({ report, onClose, onSaved }) {
     hours:               report.hours               || 0,
     expenses:            report.expenses             || 0,
     expense_description: report.expense_description || '',
+    sava_days:           report.sava_days            || [],
   });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => { api.activities().then(setActivities).catch(() => {}); }, []);
 
   const useCalendar = form.activity_id !== '';
+  const isSava = form.report_type === 'sava';
 
   async function submit(e) {
     e.preventDefault();
     if (!useCalendar && !form.description.trim()) {
       alert('Ange vad redovisningen avser.'); return;
     }
+    if (isSava && form.sava_days.length === 0) {
+      alert('Lägg till minst en dag.'); return;
+    }
+    const hours = isSava ? calcSavaHours(form.sava_days) : (form.hours || 0);
+    const report_date = isSava && form.sava_days.length > 0
+      ? form.sava_days[0].date
+      : form.report_date;
     setSaving(true);
     try {
-      await api.updateReport(report.id, { ...form, activity_id: form.activity_id || null });
+      await api.updateReport(report.id, {
+        ...form, hours, report_date,
+        activity_id: form.activity_id || null,
+        sava_days: isSava ? form.sava_days : null,
+      });
       onSaved();
     } catch(err) { alert(err.message); }
     finally { setSaving(false); }
@@ -69,7 +82,7 @@ function EditReportModal({ report, onClose, onSaved }) {
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <h2 className="font-semibold text-military-navy">Redigera redovisning</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-lg">✕</button>
@@ -78,7 +91,7 @@ function EditReportModal({ report, onClose, onSaved }) {
           <div>
             <label className="text-xs text-gray-500 block mb-1">Ersättningstyp</label>
             <select required value={form.report_type}
-                    onChange={e => setForm(f=>({...f, report_type: e.target.value}))}
+                    onChange={e => setForm(f=>({...f, report_type: e.target.value, sava_days: []}))}
                     className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-military-steel">
               <option value="km_ers">Km-ersättning</option>
               <option value="utlagg">Utlägg</option>
@@ -104,38 +117,40 @@ function EditReportModal({ report, onClose, onSaved }) {
                      className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-military-steel" />
             </div>
           )}
-          <div>
-            <label className="text-xs text-gray-500 block mb-1">Datum</label>
-            <input type="date" required value={form.report_date}
-                   onChange={e => setForm(f=>({...f, report_date: e.target.value}))}
-                   className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none" />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            {form.report_type === 'km_ers' && (
+          {isSava ? (
+            <SavaDaysEditor
+              days={form.sava_days}
+              onChange={days => setForm(f => ({ ...f, sava_days: days }))}
+            />
+          ) : (
+            <>
               <div>
-                <label className="text-xs text-gray-500 block mb-1">Körmil</label>
-                <input type="number" min="0" value={form.km}
-                       onChange={e => setForm(f=>({...f, km: e.target.value}))}
+                <label className="text-xs text-gray-500 block mb-1">Datum</label>
+                <input type="date" required value={form.report_date}
+                       onChange={e => setForm(f=>({...f, report_date: e.target.value}))}
                        className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none" />
               </div>
-            )}
-            {form.report_type === 'sava' && (
-              <div>
-                <label className="text-xs text-gray-500 block mb-1">Antal timmar</label>
-                <input type="number" min="0.5" step="0.5" value={form.hours}
-                       onChange={e => setForm(f=>({...f, hours: e.target.value}))}
-                       className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none" />
+              <div className="grid grid-cols-2 gap-2">
+                {form.report_type === 'km_ers' && (
+                  <div>
+                    <label className="text-xs text-gray-500 block mb-1">Km</label>
+                    <input type="number" min="0" value={form.km}
+                           onChange={e => setForm(f=>({...f, km: e.target.value}))}
+                           className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none" />
+                  </div>
+                )}
+                {(form.report_type === 'utlagg' || form.report_type === 'traktamente') && (
+                  <div>
+                    <label className="text-xs text-gray-500 block mb-1">Belopp (kr)</label>
+                    <input type="number" min="0" step="0.01" value={form.expenses}
+                           onChange={e => setForm(f=>({...f, expenses: e.target.value}))}
+                           className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none" />
+                  </div>
+                )}
               </div>
-            )}
-            {(form.report_type === 'utlagg' || form.report_type === 'traktamente') && (
-              <div>
-                <label className="text-xs text-gray-500 block mb-1">Belopp (kr)</label>
-                <input type="number" min="0" step="0.01" value={form.expenses}
-                       onChange={e => setForm(f=>({...f, expenses: e.target.value}))}
-                       className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none" />
-              </div>
-            )}
-          </div>
+            </>
+          )}
+
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={onClose} className="btn-secondary flex-1">Avbryt</button>
             <button type="submit" disabled={saving} className="btn-primary flex-1">

@@ -161,12 +161,13 @@ router.post('/mark-mr', requireRole('kompc'), async (req, res) => {
 
 // POST /api/reports — create
 router.post('/', async (req, res) => {
-  const { activity_id, report_date, report_type, hours, km, expenses, expense_description, description } = req.body;
+  const { activity_id, report_date, report_type, hours, km, expenses, expense_description, description, sava_days } = req.body;
   const result = await pool.query(
-    `INSERT INTO reports (user_id,activity_id,report_date,report_type,hours,km,expenses,expense_description,description)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+    `INSERT INTO reports (user_id,activity_id,report_date,report_type,hours,km,expenses,expense_description,description,sava_days)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
     [req.user.id, activity_id || null, report_date, report_type || 'km_ers',
-     hours || 0, km || 0, expenses || 0, expense_description || null, description || null]
+     hours || 0, km || 0, expenses || 0, expense_description || null, description || null,
+     sava_days ? JSON.stringify(sava_days) : null]
   );
   res.status(201).json(result.rows[0]);
 });
@@ -183,13 +184,13 @@ router.delete('/:id', async (req, res) => {
 
 // PUT /api/reports/:id — update (own draft or returned)
 router.put('/:id', async (req, res) => {
-  const { report_type, hours, km, expenses, expense_description, description, report_date } = req.body;
+  const { report_type, hours, km, expenses, expense_description, description, report_date, sava_days } = req.body;
   const result = await pool.query(
     `UPDATE reports SET report_type=$1,hours=$2,km=$3,expenses=$4,expense_description=$5,
-     description=$6,report_date=$7,updated_at=NOW()
-     WHERE id=$8 AND user_id=$9 AND status IN ('draft','returned') RETURNING *`,
+     description=$6,report_date=$7,sava_days=$8,updated_at=NOW()
+     WHERE id=$9 AND user_id=$10 AND status IN ('draft','returned') RETURNING *`,
     [report_type || 'km_ers', hours, km, expenses, expense_description, description,
-     report_date, req.params.id, req.user.id]
+     report_date, sava_days ? JSON.stringify(sava_days) : null, req.params.id, req.user.id]
   );
   if (!result.rows.length) return res.status(403).json({ error: 'Not allowed' });
   res.json(result.rows[0]);

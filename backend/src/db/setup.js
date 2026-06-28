@@ -11,6 +11,7 @@ const files = [
   'migrate_loss.sql',
   'migrate_prio.sql',
   'migrate_mr.sql',
+  'migrate_sava.sql',
   'seed.sql',
   'seed_catalog.sql',
 ];
