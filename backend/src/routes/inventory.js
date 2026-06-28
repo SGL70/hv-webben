@@ -1,6 +1,7 @@
 const express = require('express');
 const { pool, getSubtreeIds } = require('../db/index');
 const { requireAuth, requireLogistics } = require('../middleware/auth');
+const email = require('../services/email');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -44,7 +45,7 @@ router.post('/start', requireLogistics, async (req, res) => {
   const subtree = await getSubtreeIds(scopeId);
 
   const members = await pool.query(
-    'SELECT id FROM users WHERE org_unit_id = ANY($1)', [subtree]
+    'SELECT id, email FROM users WHERE org_unit_id = ANY($1)', [subtree]
   );
 
   for (const m of members.rows) {
@@ -78,6 +79,9 @@ router.post('/start', requireLogistics, async (req, res) => {
   }
 
   res.json({ started: members.rows.length });
+
+  const emails = members.rows.map(m => m.email).filter(Boolean);
+  email.notifyInventoryStarted(emails, deadline).catch(e => console.error('[notify inventory]', e.message));
 });
 
 // POST /api/inventory/:id/submit — soldier submits counts; actual_qty=0 → förlust

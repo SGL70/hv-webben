@@ -2,8 +2,9 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
-const { pool } = require('../db/index');
+const { pool, getSubtreeIds } = require('../db/index');
 const { requireAuth, requireLogistics } = require('../middleware/auth');
+const email = require('../services/email');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -44,6 +45,17 @@ router.post('/', requireLogistics, async (req, res) => {
     [title, body || null, publish_at || new Date().toISOString(), req.user.id, req.user.org_unit_id]
   );
   res.status(201).json(result.rows[0]);
+
+  // Notifiera bara om det publiceras omedelbart (inte schemalagd)
+  const post = result.rows[0];
+  if (!publish_at || new Date(publish_at) <= new Date()) {
+    getSubtreeIds(req.user.org_unit_id).then(ids =>
+      pool.query('SELECT email FROM users WHERE org_unit_id = ANY($1)', [ids])
+    ).then(u => {
+      const emails = u.rows.map(r => r.email).filter(Boolean);
+      return email.notifyNewNews(emails, post);
+    }).catch(e => console.error('[notify news]', e.message));
+  }
 });
 
 // PUT /api/news/:id — update post

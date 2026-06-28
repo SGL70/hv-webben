@@ -2,6 +2,18 @@ const express = require('express');
 const XLSX = require('xlsx');
 const { pool, getSubtreeIds } = require('../db/index');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const email = require('../services/email');
+
+const TYPE_LABEL = { km_ers:'Km-ersättning', utlagg:'Utlägg', traktamente:'Traktamente', sava:'SÄVA' };
+
+async function reportInfo(r, activityTitle) {
+  return {
+    typ:      TYPE_LABEL[r.report_type] || r.report_type,
+    aktivitet: activityTitle || r.description || '–',
+    datum:    (r.report_date || '').toString().slice(0, 10),
+    comment:  r.reviewer_comment || '',
+  };
+}
 
 const router = express.Router();
 router.use(requireAuth);
@@ -205,6 +217,24 @@ router.post('/:id/submit', async (req, res) => {
   );
   if (!result.rows.length) return res.status(403).json({ error: 'Not allowed' });
   res.json(result.rows[0]);
+
+  // Notifiera PC i samma pluton
+  pool.query(
+    `SELECT u.email FROM users u
+     JOIN org_units o ON o.id = u.org_unit_id
+     WHERE u.role IN ('pc','toc') AND o.parent_id = (
+       SELECT parent_id FROM org_units WHERE id = $1
+     ) LIMIT 1`,
+    [req.user.org_unit_id]
+  ).then(async pc => {
+    if (!pc.rows.length) return;
+    const r = result.rows[0];
+    const act = r.activity_id
+      ? await pool.query('SELECT title FROM activities WHERE id=$1', [r.activity_id])
+      : null;
+    email.notifyReportSubmitted(req.user, pc.rows[0].email,
+      await reportInfo(r, act?.rows[0]?.title));
+  }).catch(e => console.error('[notify submit]', e.message));
 });
 
 // POST /api/reports/:id/review — PC reviews (approve/return)
@@ -218,11 +248,23 @@ router.post('/:id/review', requireRole('pc'), async (req, res) => {
   );
   if (!result.rows.length) return res.status(403).json({ error: 'Not allowed' });
   res.json(result.rows[0]);
+
+  // Notifiera soldaten
+  pool.query('SELECT email FROM users WHERE id=$1', [result.rows[0].user_id])
+    .then(async u => {
+      if (!u.rows.length) return;
+      const r = result.rows[0];
+      const act = r.activity_id
+        ? await pool.query('SELECT title FROM activities WHERE id=$1', [r.activity_id])
+        : null;
+      email.notifyReportReviewed(u.rows[0].email, action,
+        await reportInfo(r, act?.rows[0]?.title));
+    }).catch(e => console.error('[notify review]', e.message));
 });
 
 // POST /api/reports/:id/approve — KompCh attests
 router.post('/:id/approve', requireRole('kompc'), async (req, res) => {
-  const { action } = req.body; // 'approve' | 'return'
+  const { action } = req.body;
   const newStatus = action === 'approve' ? 'approved' : 'submitted';
   const result = await pool.query(
     `UPDATE reports SET status=$1, approved_by=$2, approved_at=NOW(), updated_at=NOW()
@@ -231,6 +273,19 @@ router.post('/:id/approve', requireRole('kompc'), async (req, res) => {
   );
   if (!result.rows.length) return res.status(403).json({ error: 'Not allowed' });
   res.json(result.rows[0]);
+
+  if (action === 'approve') {
+    pool.query('SELECT email FROM users WHERE id=$1', [result.rows[0].user_id])
+      .then(async u => {
+        if (!u.rows.length) return;
+        const r = result.rows[0];
+        const act = r.activity_id
+          ? await pool.query('SELECT title FROM activities WHERE id=$1', [r.activity_id])
+          : null;
+        email.notifyReportApproved(u.rows[0].email,
+          await reportInfo(r, act?.rows[0]?.title));
+      }).catch(e => console.error('[notify approve]', e.message));
+  }
 });
 
 module.exports = router;

@@ -3,6 +3,8 @@ const { pool, getSubtreeIds } = require('../db/index');
 const { requireAuth, requireRole, requireLogistics, ROLE_LEVEL } = require('../middleware/auth');
 
 // KVM sits in Kompanistab — scope up to the parent Kompani so they see all unit members
+const email = require('../services/email');
+
 async function getLogisticsScope(user) {
   if (user.role === 'kvm') {
     const r = await pool.query('SELECT parent_id FROM org_units WHERE id=$1', [user.org_unit_id]);
@@ -214,6 +216,15 @@ router.post('/cases/:id/decide', requireLogistics, async (req, res) => {
   }
 
   res.json({ ok: true, status: newStatus });
+
+  // Notifiera soldaten
+  pool.query(
+    'SELECT u.email, t.name FROM equipment_cases ec JOIN users u ON u.id=ec.user_id LEFT JOIN equipment_templates t ON t.article_number=ec.article_number WHERE ec.id=$1',
+    [req.params.id]
+  ).then(r => {
+    if (!r.rows.length) return;
+    email.notifyEquipmentDecided(r.rows[0].email, action, r.rows[0].name || 'Artikel', pc_comment);
+  }).catch(e => console.error('[notify equipment]', e.message));
 });
 
 // POST /api/equipment/templates/assign — assign standard list to unit (logistics)

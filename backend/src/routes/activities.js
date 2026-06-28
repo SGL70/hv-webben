@@ -1,6 +1,7 @@
 const express = require('express');
 const { pool, getSubtreeIds } = require('../db/index');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const email = require('../services/email');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -64,6 +65,13 @@ router.post('/', requireRole('pc'), async (req, res) => {
     );
   }
   res.status(201).json(activity);
+
+  // Notifiera berörda användare
+  pool.query('SELECT email FROM users WHERE id = ANY($1)', [memberIds.rows.map(m => m.id)])
+    .then(u => {
+      const emails = u.rows.map(r => r.email).filter(Boolean);
+      return email.notifyNewActivity(emails, activity);
+    }).catch(e => console.error('[notify activity]', e.message));
 });
 
 // GET /api/activities/:id
