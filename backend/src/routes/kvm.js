@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const { PDFDocument, PDFName, PDFBool } = require('pdf-lib');
+const { PDFDocument, PDFName } = require('pdf-lib');
 const { pool } = require('../db/index');
 const { requireAuth, requireLogistics } = require('../middleware/auth');
 
@@ -63,8 +63,19 @@ router.get('/cases/:id/afse', requireLogistics, async (req, res) => {
   const pdf = await PDFDocument.load(pdfBuf);
   const form = pdf.getForm();
 
-  const set = (name, val) => {
-    try { form.getTextField(name).setText(val || ''); } catch {}
+  // Rensa befintliga AP-streams så pdf-lib tvingas regenerera med rätt font på alla sidor
+  for (const field of form.getFields()) {
+    for (const widget of field.acroField.getWidgets()) {
+      widget.delete(PDFName.of('AP'));
+    }
+  }
+
+  const set = (name, val, fontSize = 8) => {
+    try {
+      const f = form.getTextField(name);
+      f.setFontSize(fontSize);
+      f.setText(val || '');
+    } catch {}
   };
   const check = (name, on) => {
     try {
@@ -72,13 +83,6 @@ router.get('/cases/:id/afse', requireLogistics, async (req, res) => {
       on ? btn.check() : btn.uncheck();
     } catch {}
   };
-
-  // Sätt NeedAppearances så PDF-läsaren renderar fält med rätt font
-  try {
-    const acroFormRef = pdf.catalog.get(PDFName.of('AcroForm'));
-    const acroForm = pdf.context.lookup(acroFormRef);
-    if (acroForm && acroForm.set) acroForm.set(PDFName.of('NeedAppearances'), PDFBool.True);
-  } catch {}
 
   // KVM-inställningar
   set('myndighet',         s.myndighet || '');
@@ -126,7 +130,8 @@ router.get('/cases/:id/afse', requireLogistics, async (req, res) => {
   check('ersatt',           false);
   check('arende slut',      false);
 
-  const outBuf = await pdf.save({ updateFieldAppearances: false });
+  form.flatten();
+  const outBuf = await pdf.save();
 
   const filename = `afse-${ec.user_name?.replace(/\s+/g, '-') || ec.id}-${yyyy}${mm}${dd}.pdf`;
   res.setHeader('Content-Type', 'application/pdf');
