@@ -104,7 +104,9 @@ export function CreateModal({ onClose, onCreated }) {
     expense_description: '',
     sava_days:           [],
   });
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving]         = useState(false);
+  const [kmFollowUp, setKmFollowUp] = useState(null); // {report_date, activity_id, description, andSubmit}
+  const [kmValue, setKmValue]       = useState('');
 
   useEffect(() => { api.activities().then(setActivities); }, []);
 
@@ -126,19 +128,40 @@ export function CreateModal({ onClose, onCreated }) {
     setSaving(true);
     try {
       const created = await api.createReport({
-        ...form,
-        hours,
-        report_date,
+        ...form, hours, report_date,
         activity_id: form.activity_id || null,
         sava_days: isSava ? form.sava_days : null,
       });
       if (andSubmit) await api.submitReport(created.id);
-      onCreated();
+      if (isSava) {
+        setKmFollowUp({ report_date, activity_id: form.activity_id || null, description: form.description, andSubmit });
+        setKmValue('');
+      } else {
+        onCreated();
+      }
     } catch(err) { alert(err.message); }
     finally { setSaving(false); }
   }
 
+  async function submitKmFollowUp(km) {
+    if (km > 0) {
+      try {
+        const r = await api.createReport({
+          report_type: 'km_ers',
+          activity_id: kmFollowUp.activity_id,
+          description: kmFollowUp.description,
+          report_date: kmFollowUp.report_date,
+          km, hours: 0, expenses: 0,
+        });
+        if (kmFollowUp.andSubmit) await api.submitReport(r.id);
+      } catch(err) { alert('Km-ärende kunde inte skapas: ' + err.message); }
+    }
+    setKmFollowUp(null);
+    onCreated();
+  }
+
   return (
+    <>
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
@@ -243,6 +266,41 @@ export function CreateModal({ onClose, onCreated }) {
         </form>
       </div>
     </div>
+
+    {kmFollowUp && (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm">
+          <div className="px-6 py-4 border-b border-gray-100">
+            <h2 className="font-semibold text-military-navy">Km-ersättning?</h2>
+            <p className="text-xs text-gray-500 mt-1">
+              Vill du redovisa km-ersättning i samband med denna SÄVA?
+            </p>
+          </div>
+          <div className="px-6 py-4 space-y-3">
+            <div>
+              <label className="text-xs text-gray-500 block mb-1">Antal km</label>
+              <input
+                type="number" min="0" autoFocus
+                value={kmValue}
+                onChange={e => setKmValue(e.target.value)}
+                placeholder="0"
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-military-steel"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => submitKmFollowUp(0)}
+                      className="btn-secondary flex-1">Nej tack</button>
+              <button onClick={() => submitKmFollowUp(Number(kmValue))}
+                      disabled={!kmValue || Number(kmValue) <= 0}
+                      className="btn-primary flex-1 disabled:opacity-40">
+                Lägg till
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 
