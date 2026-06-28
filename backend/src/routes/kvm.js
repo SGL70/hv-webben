@@ -8,7 +8,7 @@ const { requireAuth, requireLogistics } = require('../middleware/auth');
 const router = express.Router();
 router.use(requireAuth);
 
-const PDF_PATH = path.join(__dirname, '../../../uploads/docs/forlustforteckning-decrypted.pdf');
+const PDF_PATH = path.join(__dirname, '../../uploads/docs/forlustforteckning-decrypted.pdf');
 
 // GET /api/kvm/settings
 router.get('/settings', requireLogistics, async (req, res) => {
