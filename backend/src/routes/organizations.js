@@ -38,7 +38,14 @@ router.get('/scoped', async (req, res) => {
     ids = [...new Set([...companyTree, ...batRoot.rows.map(r => r.id)])];
   }
   const { rows } = await pool.query(
-    'SELECT id, name, type, parent_id FROM org_units WHERE id = ANY($1) ORDER BY parent_id NULLS FIRST, id',
+    `SELECT id, name, type, parent_id FROM org_units WHERE id = ANY($1)
+     ORDER BY
+       COALESCE(parent_id, 0),
+       CASE WHEN name ILIKE '%chef%'                          THEN 0
+            WHEN type = 'stab' OR name ILIKE '%stab%'
+                              OR name ILIKE '%tross%'         THEN 1
+            ELSE 2 END,
+       name`,
     [ids]
   );
   res.json(rows);
