@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const { PDFDocument } = require('pdf-lib');
+const { PDFDocument, PDFName, PDFBool } = require('pdf-lib');
 const { pool } = require('../db/index');
 const { requireAuth, requireLogistics } = require('../middleware/auth');
 
@@ -63,12 +63,8 @@ router.get('/cases/:id/afse', requireLogistics, async (req, res) => {
   const pdf = await PDFDocument.load(pdfBuf);
   const form = pdf.getForm();
 
-  const set = (name, val, fontSize = 8) => {
-    try {
-      const f = form.getTextField(name);
-      f.setFontSize(fontSize);
-      f.setText(val || '');
-    } catch {}
+  const set = (name, val) => {
+    try { form.getTextField(name).setText(val || ''); } catch {}
   };
   const check = (name, on) => {
     try {
@@ -76,6 +72,10 @@ router.get('/cases/:id/afse', requireLogistics, async (req, res) => {
       on ? btn.check() : btn.uncheck();
     } catch {}
   };
+
+  // Sätt NeedAppearances så PDF-läsaren renderar fält med rätt font utan att vi behöver flatten
+  const acroForm = pdf.catalog.get(PDFName.of('AcroForm'));
+  if (acroForm) acroForm.set(PDFName.of('NeedAppearances'), PDFBool.True);
 
   // KVM-inställningar
   set('myndighet',         s.myndighet || '');
@@ -109,13 +109,21 @@ router.get('/cases/:id/afse', requireLogistics, async (req, res) => {
 
   // Beställs ej (standard)
   check('bestallas ej', true);
+  check('bestallas', false);
 
-  // Tyg-checkbox om kategori är kläder/tyg
+  // Tyg-checkbox om kategori är kläder/tyg, annars avmarkera alla materialslag
   const isTyp = /tyg|kläder|uniform|bälte|strumpa|vantar?|mössa/i.test(ec.category || '');
-  check('tyg', isTyp);
+  check('tyg',      isTyp);
+  check('flyg',     false);
+  check('int',      false);
+  check('sjukvard', false);
 
-  form.flatten();
-  const outBuf = await pdf.save();
+  // Beslutsfält — lämnas tomma (fylls manuellt)
+  check('overlammnas mynd', false);
+  check('ersatt',           false);
+  check('arende slut',      false);
+
+  const outBuf = await pdf.save({ updateFieldAppearances: false });
 
   const filename = `afse-${ec.user_name?.replace(/\s+/g, '-') || ec.id}-${yyyy}${mm}${dd}.pdf`;
   res.setHeader('Content-Type', 'application/pdf');
