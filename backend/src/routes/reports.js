@@ -26,17 +26,27 @@ router.get('/', async (req, res) => {
   if (filter === 'review') {
     // PC: submitted reports from my unit
     const ids = await getSubtreeIds(req.user.org_unit_id);
-    query = `SELECT r.*, u.name AS user_name FROM reports r
+    query = `SELECT r.*, u.name AS user_name, a.title AS activity_title FROM reports r
              JOIN users u ON u.id = r.user_id
-             WHERE r.status='submitted' AND u.org_unit_id = ANY($1) ORDER BY r.report_date DESC`;
-    params = [ids];
+             LEFT JOIN activities a ON a.id = r.activity_id
+             WHERE r.status='submitted' AND u.org_unit_id = ANY($1) AND r.user_id != $2
+             ORDER BY r.report_date DESC`;
+    params = [ids, req.user.id];
   } else if (filter === 'approve') {
-    // KompCh: reviewed reports from my unit
-    const ids = await getSubtreeIds(req.user.org_unit_id);
-    query = `SELECT r.*, u.name AS user_name FROM reports r
+    const TOP_ROLES = ['batCh', 's4', 'stab'];
+    let ids;
+    if (TOP_ROLES.includes(req.user.role)) {
+      const all = await pool.query('SELECT id FROM org_units');
+      ids = all.rows.map(r => r.id);
+    } else {
+      ids = await getSubtreeIds(req.user.org_unit_id);
+    }
+    query = `SELECT r.*, u.name AS user_name, a.title AS activity_title FROM reports r
              JOIN users u ON u.id = r.user_id
-             WHERE r.status='reviewed' AND u.org_unit_id = ANY($1) ORDER BY r.report_date DESC`;
-    params = [ids];
+             LEFT JOIN activities a ON a.id = r.activity_id
+             WHERE r.status='reviewed' AND u.org_unit_id = ANY($1) AND r.user_id != $2
+             ORDER BY r.report_date DESC`;
+    params = [ids, req.user.id];
   } else if (filter === 'approved') {
     // KompCh: recent attested reports for lookup/history
     const ids = await getSubtreeIds(req.user.org_unit_id);

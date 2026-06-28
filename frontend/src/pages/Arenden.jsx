@@ -429,7 +429,6 @@ export default function Arenden() {
       {/* ─── ATT ATTESTERA (kompc+) ──────────────────────────── */}
       {hasRole('kompc') && (
         <section>
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">Km-ers / Utlägg att attestera</h2>
           {approveReports.length === 0 ? (
             <div className="bg-white border border-gray-200 rounded-xl px-5 py-4 text-sm text-gray-400">
               Inget att attestera just nu.
