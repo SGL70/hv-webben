@@ -204,7 +204,7 @@ export default function Equipment() {
 
   const tabs = [
     ['mine',    'Min utrustning'],
-    ...(isLogistics() ? [['catalog', 'Katalog'], ['prio', 'PRIO-import']] : []),
+    ...(isLogistics() ? [['catalog', 'RU-tabell'], ['prio', 'PRIO-import']] : []),
   ];
 
   // Group standard kit by category
@@ -455,7 +455,7 @@ export default function Equipment() {
         </div>
       )}
 
-      {/* Katalog (logistikroller) */}
+      {/* RU-tabell (logistikroller) */}
       {tab === 'catalog' && <CatalogTab />}
 
       {/* PRIO-import (logistik) */}

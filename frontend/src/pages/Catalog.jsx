@@ -291,7 +291,7 @@ export default function CatalogTab() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-16 text-gray-400 text-sm">
           {items.length === 0
-            ? 'Katalogen är tom — lägg till den första artikeln.'
+            ? 'RU-tabellen är tom — lägg till den första artikeln.'
             : 'Inga träffar'}
         </div>
       ) : (
