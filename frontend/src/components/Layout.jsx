@@ -48,7 +48,7 @@ function SidebarContent({ user, pendingBadge, hasRole, isLogistics, onNav, onLog
       <div className="px-4 py-3 border-b border-white/10 shrink-0">
         <div className="flex items-stretch gap-3">
           {user?.rank && (
-            <RankInsignia rank={user?.rank} size="sidebar" className="self-stretch" />
+            <RankInsignia rank={user?.rank} size="sidebar" />
           )}
           <div className="min-w-0 flex-1">
             <div className="text-white text-sm font-medium truncate">{user?.name}</div>
