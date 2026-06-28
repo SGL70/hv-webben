@@ -39,8 +39,8 @@ router.get('/', async (req, res) => {
   res.json(result.rows);
 });
 
-// POST /api/activities — create (pc+)
-router.post('/', requireRole('pc'), async (req, res) => {
+// POST /api/activities — create (grpc+)
+router.post('/', requireRole('grpc'), async (req, res) => {
   const { title, description, type, start_time, end_time, org_unit_id } = req.body;
   const result = await pool.query(
     `INSERT INTO activities (title,description,type,start_time,end_time,created_by,org_unit_id)
@@ -100,8 +100,8 @@ router.get('/:id', async (req, res) => {
   res.json({ ...result.rows[0], responses: responses.rows });
 });
 
-// PUT /api/activities/:id — redigera aktivitet (pc+)
-router.put('/:id', requireRole('pc'), async (req, res) => {
+// PUT /api/activities/:id — redigera aktivitet (grpc+)
+router.put('/:id', requireRole('grpc'), async (req, res) => {
   const { title, description, type, start_time, end_time, org_unit_id } = req.body;
   const r = await pool.query(
     `UPDATE activities SET title=$1,description=$2,type=$3,start_time=$4,end_time=$5,org_unit_id=$6
@@ -112,8 +112,8 @@ router.put('/:id', requireRole('pc'), async (req, res) => {
   res.json(r.rows[0]);
 });
 
-// DELETE /api/activities/:id (pc+)
-router.delete('/:id', requireRole('pc'), async (req, res) => {
+// DELETE /api/activities/:id (grpc+)
+router.delete('/:id', requireRole('grpc'), async (req, res) => {
   await pool.query('DELETE FROM activity_responses WHERE activity_id=$1', [req.params.id]);
   await pool.query('DELETE FROM activities WHERE id=$1', [req.params.id]);
   res.json({ ok: true });

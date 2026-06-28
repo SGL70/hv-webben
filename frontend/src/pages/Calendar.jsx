@@ -297,7 +297,7 @@ export default function Calendar() {
     <div className="p-6 max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold text-military-navy">Kalender</h1>
-        {hasRole('pc') && (
+        {hasRole('grpc') && (
           <button onClick={() => setShowCreate(true)} className="btn-primary text-sm">
             + Ny aktivitet
           </button>
@@ -312,7 +312,7 @@ export default function Calendar() {
         <section className="mb-8">
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Kommande</h2>
           <div className="space-y-3">
-            {upcoming.map(a => <ActivityCard key={a.id} a={a} responding={responding} onRespond={respond} canEdit={hasRole('pc')} onEdit={setEditActivity} onDelete={handleDelete} />)}
+            {upcoming.map(a => <ActivityCard key={a.id} a={a} responding={responding} onRespond={respond} canEdit={hasRole('grpc')} onEdit={setEditActivity} onDelete={handleDelete} />)}
           </div>
         </section>
       )}
@@ -321,7 +321,7 @@ export default function Calendar() {
         <section>
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Genomförda</h2>
           <div className="space-y-3 opacity-60">
-            {past.map(a => <ActivityCard key={a.id} a={a} responding={responding} onRespond={respond} canEdit={hasRole('pc')} onEdit={setEditActivity} onDelete={handleDelete} />)}
+            {past.map(a => <ActivityCard key={a.id} a={a} responding={responding} onRespond={respond} canEdit={hasRole('grpc')} onEdit={setEditActivity} onDelete={handleDelete} />)}
           </div>
         </section>
       )}
