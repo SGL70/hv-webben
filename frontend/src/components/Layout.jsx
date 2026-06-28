@@ -40,7 +40,7 @@ function SidebarContent({ user, pendingBadge, hasRole, isLogistics, onNav, onLog
       <div className="px-4 py-4 border-b border-white/10 flex items-center gap-3 shrink-0">
         <img src="/logo.png" alt="" className="h-9 w-auto shrink-0" />
         <div>
-          <div className="text-white font-bold text-sm tracking-wide leading-tight">HV-WEBBEN</div>
+          <div className="text-white font-bold text-sm tracking-wide leading-tight">HvOnline</div>
           <div className="text-white/50 text-xs">Prototyp v0.1</div>
         </div>
       </div>
@@ -139,7 +139,7 @@ export default function Layout({ children }) {
             <Menu size={24} />
           </button>
           <img src="/logo.png" alt="" className="h-7 w-auto" />
-          <span className="text-white font-bold text-sm tracking-wide flex-1">HV-WEBBEN</span>
+          <span className="text-white font-bold text-sm tracking-wide flex-1">HvOnline</span>
           {pendingBadge > 0 && (
             <span className="bg-red-500 text-white text-xs font-bold rounded-full min-w-[1.25rem] h-5 flex items-center justify-center px-1">
               {pendingBadge > 9 ? '9+' : pendingBadge}
