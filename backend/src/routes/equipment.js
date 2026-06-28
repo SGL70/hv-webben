@@ -32,7 +32,8 @@ router.get('/my-kit', async (req, res) => {
       e.id            AS equipment_id,
       COALESCE(e.status, 'ej_tilldelad') AS status,
       ec.id           AS active_case_id,
-      ec.type         AS active_case_type
+      ec.type         AS active_case_type,
+      ec.case_status  AS active_case_status
     FROM equipment_templates t
     LEFT JOIN equipment e
       ON e.user_id = $1 AND e.article_number = t.article_number
@@ -47,12 +48,13 @@ router.get('/my-kit', async (req, res) => {
   // Extra items: in equipment but not matching any template article number
   const extra = await pool.query(`
     SELECT e.*,
-           ec.id   AS active_case_id,
-           ec.type AS active_case_type
+           ec.id          AS active_case_id,
+           ec.type        AS active_case_type,
+           ec.case_status AS active_case_status
     FROM equipment e
     LEFT JOIN LATERAL (
-      SELECT id, type FROM equipment_cases
-      WHERE equipment_id = e.id AND status IN ('pending','pc_review')
+      SELECT id, type, status AS case_status FROM equipment_cases
+      WHERE equipment_id = e.id AND status IN ('pending','pc_review','approved')
       ORDER BY created_at DESC LIMIT 1
     ) ec ON true
     WHERE e.user_id = $1

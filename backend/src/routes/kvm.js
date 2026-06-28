@@ -149,7 +149,13 @@ router.get('/cases/:id/afse', requireLogistics, async (req, res) => {
 // GET /api/kvm/afse-history — förlustärenden med AFSE-status
 router.get('/afse-history', requireLogistics, async (req, res) => {
   const { getSubtreeIds } = require('../db/index');
-  const ids = await getSubtreeIds(req.user.org_unit_id);
+  // KVM sitter i Kompanistab — scope upp till föräldern precis som i equipment.js
+  let scopeId = req.user.org_unit_id;
+  if (req.user.role === 'kvm') {
+    const p = await pool.query('SELECT parent_id FROM org_units WHERE id=$1', [scopeId]);
+    scopeId = p.rows[0]?.parent_id ?? scopeId;
+  }
+  const ids = await getSubtreeIds(scopeId);
   const r = await pool.query(
     `SELECT ec.id, ec.status, ec.created_at, ec.afse_generated_at, ec.material_received_at,
             u.name AS user_name, u.personal_number,
