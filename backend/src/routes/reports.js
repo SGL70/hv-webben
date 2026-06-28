@@ -236,6 +236,18 @@ router.post('/:id/submit', async (req, res) => {
   }).catch(e => console.error('[notify submit]', e.message));
 });
 
+// POST /api/reports/batch-review — PC godkänner flera rapporter på en gång
+router.post('/batch-review', requireRole('pc'), async (req, res) => {
+  const { ids } = req.body;
+  if (!Array.isArray(ids) || !ids.length) return res.status(400).json({ error: 'ids required' });
+  const result = await pool.query(
+    `UPDATE reports SET status='reviewed', reviewed_by=$1, reviewed_at=NOW(), updated_at=NOW()
+     WHERE id = ANY($2) AND status='submitted' RETURNING id`,
+    [req.user.id, ids]
+  );
+  res.json({ reviewed: result.rows.length });
+});
+
 // POST /api/reports/:id/review — PC reviews (approve/return)
 router.post('/:id/review', requireRole('pc'), async (req, res) => {
   const { action, comment } = req.body;
