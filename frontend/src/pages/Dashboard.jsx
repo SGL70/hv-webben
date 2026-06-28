@@ -317,14 +317,14 @@ export default function Dashboard() {
 
           <Link to="/arenden"
                 className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-sm transition-shadow block">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Kmers / Utlägg</h3>
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Ärenden</h3>
             {pendingReports.length === 0 ? (
               <p className="text-xs text-gray-400">Inga väntande rapporter</p>
             ) : (
               <ul className="space-y-1">
                 {pendingReports.slice(0, 3).map(r => (
                   <li key={r.id} className="text-xs text-gray-700">
-                    {r.report_date}
+                    {fmtDate(r.report_date)}
                     {r.km > 0 && <span className="text-gray-400"> · {r.km} km</span>}
                     {r.expenses > 0 && <span className="text-gray-400"> · {Number(r.expenses).toFixed(0)} kr</span>}
                   </li>
