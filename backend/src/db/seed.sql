@@ -67,4 +67,4 @@ INSERT INTO reports (id, user_id, report_type, report_date, km, description, sta
   (1, 1, 'km_ers', CURRENT_DATE, 25, 'Förrådsbesök', 'draft')
 ON CONFLICT DO NOTHING;
 
-SELECT setval('reports_id_seq', 10);
+SELECT setval('reports_id_seq', (SELECT GREATEST(MAX(id), 1) FROM reports));
