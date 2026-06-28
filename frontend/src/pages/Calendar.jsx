@@ -257,11 +257,10 @@ function ActivityCard({ a, responding, onRespond, onEdit, onDelete, canEdit }) {
         </div>
       </div>
       <div className="text-xs text-gray-400 mb-0.5">{fmt(a.start_time)} – {fmt(a.end_time)}</div>
-      <div className="text-xs text-gray-400">
-        {a.unit_name} · {a.created_by_name}
-        {a.responsible_name && (
-          <span className="ml-2 text-military-navy font-medium">Ansvarig: {a.responsible_name}</span>
-        )}
+      <div className="text-xs text-gray-400 space-y-0.5">
+        <div>{a.unit_name}</div>
+        {a.responsible_name && <div><span className="text-military-navy font-medium">Ansvarig:</span> {a.responsible_name}</div>}
+        <div><span className="text-gray-400">Skapad av:</span> {a.created_by_name}</div>
       </div>
       {a.description && <p className="text-xs text-gray-500 mt-2">{a.description}</p>}
 
