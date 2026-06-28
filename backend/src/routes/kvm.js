@@ -66,7 +66,7 @@ router.get('/cases/:id/afse', requireLogistics, async (req, res) => {
   // Rensa befintliga AP-streams så pdf-lib tvingas regenerera med rätt font på alla sidor
   for (const field of form.getFields()) {
     for (const widget of field.acroField.getWidgets()) {
-      widget.delete(PDFName.of('AP'));
+      widget.dict.delete(PDFName.of('AP'));
     }
   }
 
