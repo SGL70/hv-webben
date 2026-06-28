@@ -248,7 +248,7 @@ export default function Arenden() {
           <h2 className="text-sm font-semibold text-gray-700">Mina km-ers / Utlägg</h2>
           <button onClick={() => setShowCreateReport(true)}
                   className="btn-primary text-xs">
-            Ny rapport
+            + Ny redovisning
           </button>
         </div>
 

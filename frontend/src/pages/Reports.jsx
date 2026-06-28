@@ -45,17 +45,18 @@ export function CreateModal({ onClose, onCreated }) {
 
   const useCalendar = form.activity_id !== '' && form.activity_id !== null;
 
-  async function submit(e) {
+  async function submit(e, andSubmit = false) {
     e.preventDefault();
     if (!useCalendar && !form.description.trim()) {
       alert('Ange vad redovisningen avser.'); return;
     }
     setSaving(true);
     try {
-      await api.createReport({
+      const created = await api.createReport({
         ...form,
         activity_id: form.activity_id || null,
       });
+      if (andSubmit) await api.submitReport(created.id);
       onCreated();
     } catch(err) { alert(err.message); }
     finally { setSaving(false); }
@@ -157,8 +158,13 @@ export function CreateModal({ onClose, onCreated }) {
 
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={onClose} className="btn-secondary flex-1">Avbryt</button>
-            <button type="submit" disabled={saving} className="btn-primary flex-1">
-              {saving ? 'Sparar…' : 'Spara som utkast'}
+            <button type="submit" disabled={saving} className="btn-secondary flex-1"
+                    onClick={e => submit(e, false)}>
+              {saving ? 'Sparar…' : 'Spara utkast'}
+            </button>
+            <button type="submit" disabled={saving} className="btn-primary flex-1"
+                    onClick={e => submit(e, true)}>
+              {saving ? 'Skickar…' : 'Skicka in'}
             </button>
           </div>
         </form>
