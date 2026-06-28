@@ -178,7 +178,6 @@ export function CreateModal({ onClose, onCreated }) {
                     className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-military-steel">
               <option value="km_ers">Km-ersättning</option>
               <option value="utlagg">Utlägg</option>
-              <option value="traktamente">Traktamente</option>
               <option value="sava">SÄVA (tid)</option>
             </select>
           </div>
@@ -229,7 +228,7 @@ export function CreateModal({ onClose, onCreated }) {
                            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none" />
                   </div>
                 )}
-                {(form.report_type === 'utlagg' || form.report_type === 'traktamente') && (
+                {form.report_type === 'utlagg' && (
                   <div>
                     <label className="text-xs text-gray-500 block mb-1">Belopp (kr)</label>
                     <input type="number" min="0" step="0.01" value={form.expenses}
@@ -238,12 +237,15 @@ export function CreateModal({ onClose, onCreated }) {
                   </div>
                 )}
               </div>
-              {form.report_type === 'utlagg' && parseFloat(form.expenses) > 0 && (
+              {form.report_type === 'utlagg' && (
                 <>
-                  <input placeholder="Syfte för utlägg"
-                         value={form.expense_description}
-                         onChange={e => setForm(f=>({...f, expense_description: e.target.value}))}
-                         className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none" />
+                  <div>
+                    <label className="text-xs text-gray-500 block mb-1">Notering</label>
+                    <input placeholder="t.ex. Utlägg för lunch, parkeringsavgift…"
+                           value={form.expense_description}
+                           onChange={e => setForm(f=>({...f, expense_description: e.target.value}))}
+                           className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-military-steel" />
+                  </div>
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-800">
                     Kom ihåg att skicka originalkvitto per post till MR-grupp/HR.
                   </div>

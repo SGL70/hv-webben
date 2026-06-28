@@ -29,7 +29,7 @@ function wrap(body) {
     </div>
     <div style="background:#f8f9fa;padding:24px;border-radius:0 0 8px 8px;border:1px solid #e0e0e0">
       ${body}
-      <p style="margin-top:16px;font-size:14px;color:#444">Logga in på <strong>hvsoldat.se</strong> för att hantera ärendet.</p>
+      <p style="margin-top:16px;font-size:14px;color:#444">Logga in i <strong>HvSoldat</strong> för att hantera ärendet.</p>
       <p style="font-size:11px;color:#aaa;margin-top:24px">Du får detta mail för att du är registrerad i HvSoldat.</p>
     </div>
   </div>`;
