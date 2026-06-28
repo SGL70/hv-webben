@@ -39,7 +39,7 @@ function Section({ title, children }) {
 const SETTINGS_FIELDS = [
   { key: 'myndighet',         label: 'Myndighet/enhet',      num: '1'  },
   { key: 'materielutlamnare', label: 'Materielutlämnare',    num: '5'  },
-  { key: 'kvm_initialer',     label: 'KVM initialer (sign)', num: '—'  },
+  { key: 'kvm_initialer',     label: 'Kompadj sign',         num: '30' },
   { key: 'foradsplats',       label: 'Förrådsplats',         num: '9'  },
   { key: 'natv_order',        label: 'Nat-V / Order nr',     num: '—'  },
   { key: 'kostbadsstalle',    label: 'Kostbadsställe',       num: '—'  },
@@ -257,7 +257,6 @@ export default function LossReport() {
             <Row num="27" label="Belopp"            value={null} />
             <Row num="30" label="Motsv mtrl beställs" value={null} note="Kryssa ruta på blanketten" />
             <Row num="40" label="Beslut"            value={null} note="Överlämnas / Ersatt / Avslutas" />
-            <Row num="—"  label="Kompadj sign"      value={null} />
             <Row num="—"  label="Underskrift + tjänstegrad" value={null} />
           </tbody>
         </Section>
