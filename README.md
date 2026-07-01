@@ -100,23 +100,20 @@ Appen hanterar personuppgifter (namn, adress, telefon, personnummer, tjänstedat
 
 ### Skalbarhet — 25 000 användare, 40 bataljoner
 
-Prototypen är testad i ensam-kompani-läge men datamodell och autentisering är designade för att hålla i skala. Nedan beskrivs de tre verkliga problemen och hur de löses.
+Prototypen är testad i ensam-kompani-läge men datamodell och autentisering är designade för att hålla i skala. Nedan är lösningsidéerna för de tre verkliga skalningsutmaningarna.
 
-**Problem 1: Multi-tenancy saknas (allvarligt).** Idag är org-trädet ett enda träd i databasen. 40 bataljoner i samma träd med delad åtkomstkontroll innebär att en bug i `getSubtreeIds` kan läcka data över bataljonsgränser.
-Lösning: PostgreSQL Row-Level Security (RLS) med en `battalion_id`-kolumn på alla känsliga tabeller, vilket ger isolering nära datan snarare än i applikationslagret.
+**Lösningsidéer:**
+- [ ] **Multi-tenancy via Row-Level Security** — idag är org-trädet ett enda träd i databasen, så 40 bataljoner med delad åtkomstkontroll innebär att en bugg i `getSubtreeIds` kan läcka data över bataljonsgränser. Lösning: PostgreSQL RLS med en `battalion_id`-kolumn på alla känsliga tabeller, vilket ger isolering nära datan snarare än i applikationslagret.
 
-```sql
--- Exempel: RLS på reports
-ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
-CREATE POLICY battalion_isolation ON reports
-  USING (battalion_id = current_setting('app.battalion_id')::int);
-```
+  ```sql
+  -- Exempel: RLS på reports
+  ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
+  CREATE POLICY battalion_isolation ON reports
+    USING (battalion_id = current_setting('app.battalion_id')::int);
+  ```
 
-**Problem 2: `pendingCount` pollas vid varje sidladdning.** `/api/reports/pending-count` (3–4 DB-queries) anropas varje gång Layout.jsx renderas för samtliga inloggade användare. Vid 1 000 aktiva användare som navigerar flitigt ger det konstant onödig databasbelastning för data som sällan ändras.
-Lösning: Server-Sent Events (SSE) eller WebSocket för push när status ändras, alternativt Redis-cache med kort TTL (30 s). SSE är enklast att lägga till utan att ändra frontend-arkitekturen.
-
-**Problem 3: Anslutningspoolning vid horisontell skalning.** `pg.Pool` defaultar till 10 connections per Node.js-process. Med flera parallella processer bakom en load balancer multipliceras antalet connections mot PostgreSQL snabbt.
-Lösning: PgBouncer i transaction mode framför databasen absorberar connection-trycket och gör att Node.js-processerna kan skalas ut fritt.
+- [ ] **Push istället för polling av `pendingCount`** — `/api/reports/pending-count` (3–4 DB-queries) anropas varje gång Layout.jsx renderas för samtliga inloggade användare, vilket vid 1 000 aktiva användare ger konstant onödig databasbelastning för data som sällan ändras. Lösning: Server-Sent Events (SSE) eller WebSocket för push när status ändras, alternativt Redis-cache med kort TTL (30 s). SSE är enklast att lägga till utan att ändra frontend-arkitekturen.
+- [ ] **PgBouncer för anslutningspoolning** — `pg.Pool` defaultar till 10 connections per Node.js-process, så flera parallella processer bakom en load balancer multiplicerar snabbt antalet connections mot PostgreSQL. Lösning: PgBouncer i transaction mode framför databasen absorberar connection-trycket och låter Node.js-processerna skalas ut fritt.
 
 **Planerat arkitekturlyft:**
 
