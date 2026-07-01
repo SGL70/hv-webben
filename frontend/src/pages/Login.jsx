@@ -68,25 +68,32 @@ export default function Login() {
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: '#1d3557' }}>
       {/* ─── Vänster panel ─── */}
-      <div className="w-full md:w-[44%] md:min-w-[300px] flex flex-col px-8 md:px-10 py-12">
+      <div
+        className="w-full md:w-[44%] md:min-w-[300px] flex flex-col px-8 md:px-10 py-12"
+        style={{ fontFamily: '"Segoe UI", system-ui, sans-serif' }}
+      >
         {/* Toppspacer — skjuter innehållet mot mitten */}
         <div className="flex-[2]" />
 
-        {/* Korp + text i rad */}
-        <div className="flex items-start gap-6">
+        {/* Korp + text, centrerat */}
+        <div className="flex flex-col items-center text-center">
           <img
             src="/korp.png"
             alt="Korp"
-            className="h-44 w-auto shrink-0 select-none"
+            className="h-32 w-auto mb-5 select-none"
           />
-          <div className="pt-4">
-            <h1 className="text-white text-2xl font-semibold mb-3 tracking-wide">HvOnline</h1>
-            <div className="border-b border-white/25 mb-4" />
-            <p className="text-white/70 text-sm leading-relaxed">
-              Håll koll på din materiel, kommande<br />
-              aktiviteter och utlägg/ersättningar
-            </p>
-          </div>
+          <h1 className="text-2xl mb-1 tracking-wide" style={{ letterSpacing: 2 }}>
+            <span className="text-white font-black">Hv</span>
+            <span className="text-white/60 font-normal">Online</span>
+          </h1>
+          <p className="text-white/40 text-[11px] uppercase mb-5" style={{ letterSpacing: 3 }}>
+            Personlig admin för Hemvärnet
+          </p>
+          <div className="border-b border-white/25 w-16 mb-4" />
+          <p className="text-white/70 text-sm leading-relaxed">
+            Håll koll på din materiel, kommande<br />
+            aktiviteter och utlägg/ersättningar
+          </p>
         </div>
 
         {/* Mellanspacer */}
